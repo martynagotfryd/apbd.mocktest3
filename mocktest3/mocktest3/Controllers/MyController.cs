@@ -15,7 +15,7 @@ namespace mocktest3.Controllers
             _repository = repository;
         }
 
-        [HttpGet]
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetOrder(int id)
         {
             if (!await _repository.DoesOrderExist(id))
@@ -23,7 +23,7 @@ namespace mocktest3.Controllers
                 return NotFound("Order not found");
             }
 
-            var order = _repository.GetOrderInfo(id);
+            var order = await _repository.GetOrderInfo(id);
             
             return Ok(order);
         }

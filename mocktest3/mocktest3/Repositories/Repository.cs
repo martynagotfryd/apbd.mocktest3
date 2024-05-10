@@ -17,7 +17,7 @@ public class Repository : IRepository
     {
         var query = "SELECT 1 FROM [Order] o WHERE o.OrderId = @Id";
         
-        await using SqlConnection connection= new SqlConnection(_configuration.GetConnectionString("Defaul"));
+        await using SqlConnection connection= new SqlConnection(_configuration.GetConnectionString("Default"));
         await using SqlCommand command = new SqlCommand();
 
         command.Connection = connection;
@@ -26,7 +26,7 @@ public class Repository : IRepository
 
         await connection.OpenAsync();
 
-        var res = command.ExecuteScalarAsync();
+        var res = await command.ExecuteScalarAsync();
 
         return res is not null;
     }
@@ -37,7 +37,7 @@ public class Repository : IRepository
                     "p.Name AS Name, \noi.Quantity AS Amount, \np.Price AS Price " +
                     "FROM [Order] o\nJOIN OrderItem oi ON oi.OrderId = o.OrderId\nJOIN Product p ON p.ProductId = oi.ProductId\nWHERE o.OrderId = @Id";
         
-        await using SqlConnection connection= new SqlConnection(_configuration.GetConnectionString("Defaul"));
+        await using SqlConnection connection= new SqlConnection(_configuration.GetConnectionString("Default"));
         await using SqlCommand command = new SqlCommand();
 
         command.Connection = connection;
@@ -52,7 +52,8 @@ public class Repository : IRepository
         var dateOrdinal = reader.GetOrdinal("Date");
         var totalPriceOrdinal = reader.GetOrdinal("TotalPrice");
         var nameOrdinal = reader.GetOrdinal("Name");
-        
+        var amountOrdinal = reader.GetOrdinal("Amount");
+        var priceOrdinal = reader.GetOrdinal("Price");
         
         OrderDto orderDto = null;
 
@@ -62,14 +63,27 @@ public class Repository : IRepository
             {
                 orderDto.Products.Add(new ProductDto()
                 {
-                    Name = 
+                    Name = reader.GetString(nameOrdinal),
+                    Amount = reader.GetInt32(amountOrdinal),
+                    Price = reader.GetDecimal(priceOrdinal)
                 });
             }
             else
             {
                 orderDto = new OrderDto()
                 {
-                    
+                    Id = reader.GetInt32(idOrdinal),
+                    Date = reader.GetDateTime(dateOrdinal),
+                    TotalPrice = reader.GetDecimal(totalPriceOrdinal),
+                    Products = new List<ProductDto>()
+                    {
+                        new ProductDto()
+                        {
+                            Name = reader.GetString(nameOrdinal),
+                            Amount = reader.GetInt32(amountOrdinal),
+                            Price = reader.GetDecimal(priceOrdinal)
+                        }
+                    }
                 };
             }
         }
