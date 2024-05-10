@@ -27,6 +27,22 @@ namespace mocktest3.Controllers
             
             return Ok(order);
         }
-        
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateOrder(int orderId, int productId, int amount)
+        {
+            if (!await _repository.DoesOrderExist(orderId))
+            {
+                return NotFound("Order not found");
+            }
+            if (!await _repository.DoesProductExist(productId))
+            {
+                return NotFound("Product not found in given order");
+            }
+
+            await _repository.UpdateAmount(orderId, productId, amount);
+
+            return Ok();
+        }
     }
 }

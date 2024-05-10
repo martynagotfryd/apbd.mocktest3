@@ -92,4 +92,40 @@ public class Repository : IRepository
 
         return orderDto;
     }
+
+    public async Task<bool> DoesProductExist(int orderId)
+    {
+        var query = "SELECT 1 FROM OrderItem oi WHERE oi.OrderId = @Id";
+        
+        await using SqlConnection connection= new SqlConnection(_configuration.GetConnectionString("Default"));
+        await using SqlCommand command = new SqlCommand();
+
+        command.Connection = connection;
+        command.CommandText = query;
+        command.Parameters.AddWithValue("@Id", orderId);
+
+        await connection.OpenAsync();
+
+        var res = await command.ExecuteScalarAsync();
+
+        return res is not null;
+    }
+
+    public async Task UpdateAmount(int orderId, int productId, int amount)
+    {
+        var query = "UPDATE OrderItem SET Quantity = @Amount WHERE OrderId = @OrderId AND ProductId = @ProductId";
+        
+        await using SqlConnection connection= new SqlConnection(_configuration.GetConnectionString("Default"));
+        await using SqlCommand command = new SqlCommand();
+
+        command.Connection = connection;
+        command.CommandText = query;
+        command.Parameters.AddWithValue("@OrderId", orderId);
+        command.Parameters.AddWithValue("@ProductId", productId);
+        command.Parameters.AddWithValue("@Amount", amount);
+
+        await connection.OpenAsync();
+
+        await command.ExecuteScalarAsync();
+    }
 }
